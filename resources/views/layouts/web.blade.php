@@ -10,7 +10,7 @@
 </head>
 
 <body class="bg-gradient-to-b from-gray-900 to-black text-white min-h-screen flex items-center justify-center">
-    <main class="flex-grow">
+    <main>
         @yield('content')
     </main>
     @livewireScripts

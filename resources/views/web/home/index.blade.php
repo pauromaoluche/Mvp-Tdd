@@ -8,8 +8,8 @@
         </p>
 
         <div class="flex flex-col sm:flex-row justify-center gap-4">
-            <a href="/login" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold transition">Entrar</a>
-            <a href="/register"
+            <a href="{{ route('index.auth', ['mode' => 'login']) }}" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold transition">Entrar</a>
+            <a href="{{ route('index.auth', ['mode' => 'registrar']) }}"
                 class="px-6 py-3 bg-yellow-400 text-black hover:bg-yellow-500 rounded-lg font-semibold transition">Registrar-se</a>
         </div>
     </div>
