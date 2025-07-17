@@ -39,7 +39,6 @@
                                             <code class="text-white">{{ $token }}</code>
                                         </div>
                                     </div>
-                                   
                                 </div>
                                 
                                 <div class="bg-dark p-3 rounded mb-3">
