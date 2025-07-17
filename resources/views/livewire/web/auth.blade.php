@@ -68,14 +68,16 @@
         <div>
             @if ($mode == 'register')
                 <button type="submit"
-                    class="w-full py-3 bg-yellow-400 hover:bg-yellow-500 text-black font-bold rounded-lg transition duration-200"
+                    style="border-radius: 10px;"
+                    class="w-full py-3 bg-yellow-400 hover:bg-yellow-500 text-black font-bold rounded-xl transition duration-200"
                     wire:loading.attr="disabled">
                     <span wire:loading.remove wire:target="register">Criar conta</span>
                     <span wire:loading wire:target="register">Registrando...</span>
                 </button>
             @else
                 <button type="submit"
-                    class="w-full py-3 bg-yellow-400 hover:bg-yellow-500 text-black font-bold rounded-lg transition duration-200"
+                    style="border-radius: 10px;"
+                    class="w-full py-3 bg-yellow-400 hover:bg-yellow-500 text-black font-bold rounded-xl transition duration-200"
                     wire:loading.attr="disabled">
                     <span wire:loading.remove wire:target="login">Logar</span>
                     <span wire:loading wire:target="login">Logando...</span>

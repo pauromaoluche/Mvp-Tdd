@@ -45,4 +45,12 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    /**
+     * Relacionamento com PIX
+     */
+    public function pixes()
+    {
+        return $this->hasMany(Pix::class);
+    }
 }
