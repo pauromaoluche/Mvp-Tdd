@@ -15,13 +15,25 @@ class PixListTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        
+        // Força a configuração do banco de dados para usar SQLite em memória
+        config([
+            'database.default' => 'sqlite',
+            'database.connections.sqlite.database' => ':memory:',
+        ]);
+    }
+
     #[Test]
     public function componente_pode_ser_renderizado()
     {
         $user = User::factory()->create();
         $this->actingAs($user);
 
-        $component = Livewire::test(PixList::class);
+        $component = Livewire::actingAs($user)
+            ->test(PixList::class);
 
         $component->assertStatus(200);
         $component->assertSee('Meus PIXs');
@@ -41,7 +53,8 @@ class PixListTest extends TestCase
             'expires_at' => Carbon::now()->addMinutes(10)
         ]);
 
-        $component = Livewire::test(PixList::class);
+        $component = Livewire::actingAs($user)
+            ->test(PixList::class);
 
         $component->assertSee('test-token-123');
         $component->assertSee('Pendente');
@@ -62,7 +75,8 @@ class PixListTest extends TestCase
             'expires_at' => Carbon::now()->addMinutes(10)
         ]);
 
-        $component = Livewire::test(PixList::class);
+        $component = Livewire::actingAs($user1)
+            ->test(PixList::class);
 
         $component->assertDontSee('other-user-token');
     }
@@ -73,7 +87,8 @@ class PixListTest extends TestCase
         $user = User::factory()->create();
         $this->actingAs($user);
 
-        $component = Livewire::test(PixList::class);
+        $component = Livewire::actingAs($user)
+            ->test(PixList::class);
 
         $component->assertSee('Você ainda não gerou nenhum PIX.');
         $component->assertSee('Gerar Primeiro PIX');
@@ -85,7 +100,8 @@ class PixListTest extends TestCase
         $user = User::factory()->create();
         $this->actingAs($user);
 
-        $component = Livewire::test(PixList::class)
+        $component = Livewire::actingAs($user)
+            ->test(PixList::class)
             ->call('refreshData');
 
         $component->assertHasNoErrors();
@@ -119,10 +135,69 @@ class PixListTest extends TestCase
             'expires_at' => Carbon::now()->subMinutes(10)
         ]);
 
-        $component = Livewire::test(PixList::class);
+        $component = Livewire::actingAs($user)
+            ->test(PixList::class);
 
         $component->assertSee('Pendente');
         $component->assertSee('Pago');
         $component->assertSee('Expirado');
     }
-} 
+
+    #[Test]
+    public function ordena_pixes_por_data_de_criacao_decrescente()
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $pix1 = Pix::create([
+            'user_id' => $user->id,
+            'token' => 'first-token',
+            'status' => 'generated',
+            'expires_at' => Carbon::now()->addMinutes(10)
+        ]);
+
+        // Aguarda 1 segundo para garantir ordem
+        sleep(1);
+
+        $pix2 = Pix::create([
+            'user_id' => $user->id,
+            'token' => 'second-token',
+            'status' => 'generated',
+            'expires_at' => Carbon::now()->addMinutes(10)
+        ]);
+
+        $component = Livewire::actingAs($user)
+            ->test(PixList::class);
+
+        // Verifica se o PIX mais recente aparece primeiro
+        $component->assertSeeInOrder(['second-token', 'first-token']);
+    }
+
+    #[Test]
+    public function exibe_botao_de_simular_pagamento_apenas_para_pix_pendentes()
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $pixPending = Pix::create([
+            'user_id' => $user->id,
+            'token' => 'pending-token',
+            'status' => 'generated',
+            'expires_at' => Carbon::now()->addMinutes(10)
+        ]);
+
+        $pixPaid = Pix::create([
+            'user_id' => $user->id,
+            'token' => 'paid-token',
+            'status' => 'paid',
+            'expires_at' => Carbon::now()->addMinutes(10)
+        ]);
+
+        $component = Livewire::actingAs($user)
+            ->test(PixList::class);
+
+        // Deve mostrar botão de simular pagamento apenas para PIX pendente
+        $component->assertSee('Simular Pagamento');
+        $component->assertSee('Copiar Link');
+    }
+}

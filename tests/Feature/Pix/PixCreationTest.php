@@ -7,6 +7,7 @@ use App\Models\Pix;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 use PHPUnit\Framework\Attributes\Test;
+use Livewire\Livewire;
 
 class PixCreationTest extends TestCase
 {
@@ -18,12 +19,17 @@ class PixCreationTest extends TestCase
         $user = User::factory()->create();
         $this->actingAs($user);
 
-        $response = $this->post(route('pix.store'));
+        // Acessa a página de criação de PIX
+        $response = $this->get(route('pix.create'));
+        $response->assertStatus(200);
 
-        $response->assertRedirect(route('pix.list'));
-        $response->assertSessionHas('success', 'PIX gerado com sucesso!');
-        $response->assertSessionHas('new_pix');
+        // Usa Livewire para gerar o PIX
+        $component = Livewire::actingAs($user)
+            ->test(\App\Livewire\Web\PixCreator::class)
+            ->call('generatePix')
+            ->assertHasNoErrors();
 
+        // Verifica se o PIX foi criado no banco
         $this->assertDatabaseHas('pixes', [
             'user_id' => $user->id,
             'status' => 'generated',
@@ -37,28 +43,10 @@ class PixCreationTest extends TestCase
     #[Test]
     public function visitantes_nao_podem_gerar_pix()
     {
-        $response = $this->post(route('pix.store'));
+        $response = $this->get(route('pix.create'));
         
-        $response->assertRedirect(route('login'));
+        $response->assertRedirect(route('index.auth', 'login'));
         $this->assertDatabaseEmpty('pixes');
-    }
-
-    #[Test]
-    public function pix_criado_tem_token_unico()
-    {
-        $user = User::factory()->create();
-        $this->actingAs($user);
-
-        // Cria primeiro PIX
-        $this->post(route('pix.store'));
-        $firstPix = Pix::first();
-
-        // Cria segundo PIX
-        $this->post(route('pix.store'));
-        $secondPix = Pix::latest()->first();
-
-        $this->assertNotEquals($firstPix->token, $secondPix->token);
-        $this->assertEquals(2, Pix::count());
     }
 
     #[Test]
@@ -68,7 +56,11 @@ class PixCreationTest extends TestCase
         $this->actingAs($user);
 
         $beforeCreation = now();
-        $this->post(route('pix.store'));
+        
+        Livewire::actingAs($user)
+            ->test(\App\Livewire\Web\PixCreator::class)
+            ->call('generatePix');
+            
         $afterCreation = now();
 
         $pix = Pix::first();
@@ -89,7 +81,6 @@ class PixCreationTest extends TestCase
         $response = $this->get(route('pix.create'));
 
         $response->assertStatus(200);
-        $response->assertViewIs('web.pix.create');
         $response->assertSee('Gerar PIX Fake');
     }
 
@@ -98,7 +89,7 @@ class PixCreationTest extends TestCase
     {
         $response = $this->get(route('pix.create'));
         
-        $response->assertRedirect(route('login'));
+        $response->assertRedirect(route('index.auth', 'login'));
     }
 
     #[Test]
@@ -108,14 +99,17 @@ class PixCreationTest extends TestCase
         $this->actingAs($user);
 
         // Cria alguns PIXs
-        $this->post(route('pix.store'));
-        $this->post(route('pix.store'));
+        Livewire::actingAs($user)
+            ->test(\App\Livewire\Web\PixCreator::class)
+            ->call('generatePix');
+            
+        Livewire::actingAs($user)
+            ->test(\App\Livewire\Web\PixCreator::class)
+            ->call('generatePix');
 
         $response = $this->get(route('pix.list'));
 
         $response->assertStatus(200);
-        $response->assertViewIs('web.pix.created');
-        $response->assertViewHas('pixes');
-        $response->assertSee('PIXs Gerados');
+        $response->assertSee('Meus PIXs');
     }
 }

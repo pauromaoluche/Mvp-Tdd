@@ -21,9 +21,6 @@ class PixCreator extends Component
     {
         $this->isLoading = true;
         
-        // Simula um pequeno delay para mostrar o loading
-        sleep(1);
-        
         try {
             $this->createdPix = $this->pixService->create();
             
