@@ -45,7 +45,7 @@ class Auth extends Component
                 'login_password' => 'A senha pode estar errada.',
             ]);
         }
-        return redirect()->route('index.index');
+        return redirect()->route('pix.list');
     }
 
     public function render()
